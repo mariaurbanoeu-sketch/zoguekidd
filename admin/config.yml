@@ -12,18 +12,33 @@ collections:
     editor:
       preview: false
     files:
-      - label: "Condiciones de Trabajo"
-        name: "condiciones"
-        file: "datos/condiciones.json"
+      - label: "1. Fotos y Estadísticas (Quién Soy)"
+        name: "inicio"
+        file: "datos/inicio.json"
         fields:
-          - {label: "Precio Base Videoclip", name: "precio_video", widget: "string"}
-          - {label: "Texto Rodaje", name: "texto_rodaje", widget: "text"}
-          - {label: "Texto Edición", name: "texto_edicion", widget: "text"}
-          - {label: "Texto Entrega", name: "texto_entrega", widget: "text"}
-          - {label: "Texto Desplazamientos", name: "texto_desplazamientos", widget: "text"}
-          - {label: "Texto Reservas y Pagos", name: "texto_reservas", widget: "text"}
+          - {label: "Foto 1 (Portada Principal)", name: "foto_hero", widget: "image", required: false}
+          - {label: "Foto 2 (Sección About)", name: "foto_about", widget: "image", required: false}
+          - {label: "Foto 3 (Sección Servicios)", name: "foto_servicios", widget: "image", required: false}
+          - label: "Estadísticas Numéricas"
+            name: "estadisticas"
+            widget: "list"
+            fields:
+              - {label: "Número o Abreviatura (Ej: 30+)", name: "valor", widget: "string"}
+              - {label: "Etiqueta (Ej: Proyectos)", name: "etiqueta", widget: "string"}
 
-      - label: "Portafolio de Vídeos"
+      - label: "2. Qué hago (Servicios)"
+        name: "servicios"
+        file: "datos/servicios.json"
+        fields:
+          - label: "Lista de Servicios"
+            name: "lista"
+            widget: "list"
+            summary: '{{fields.nombre}}'
+            fields:
+              - {label: "Nombre del Servicio", name: "nombre", widget: "string"}
+              - {label: "ID de YouTube (Opcional - Si lo pones, abrirá un vídeo al clickar)", name: "video_id", widget: "string", required: false}
+
+      - label: "3. Portafolio de Vídeos"
         name: "videos"
         file: "datos/videos.json"
         fields:
@@ -34,5 +49,18 @@ collections:
             fields:
               - {label: "Título del Proyecto", name: "titulo", widget: "string"}
               - {label: "ID de YouTube", name: "youtube_id", widget: "string"}
-              - {label: "Categoría (ej: Music Video)", name: "categoria", widget: "string"}
+              - {label: "Categoría", name: "categoria", widget: "string"}
               - {label: "Director / Créditos", name: "director", widget: "string"}
+
+      - label: "4. Condiciones de Trabajo"
+        name: "condiciones"
+        file: "datos/condiciones.json"
+        fields:
+          - {label: "Precio Base Videoclip", name: "precio_video", widget: "string"}
+          - label: "Apartados de las Condiciones"
+            name: "bloques"
+            widget: "list"
+            summary: '{{fields.titulo}}'
+            fields:
+              - {label: "Título (Ej: Rodaje)", name: "titulo", widget: "string"}
+              - {label: "Texto explicativo", name: "texto", widget: "text"}
