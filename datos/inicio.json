@@ -1,8 +1,20 @@
 {
   "estadisticas": [
-    { "valor": "30+", "etiqueta": "Proyectos" },
-    { "valor": "100%", "etiqueta": "Dedicación" },
-    { "valor": "MV", "etiqueta": "Music Video" },
-    { "valor": "ES", "etiqueta": "España" }
+    {
+      "valor": "20+",
+      "etiqueta": "Proyectos"
+    },
+    {
+      "valor": "100%",
+      "etiqueta": "Dedicación"
+    },
+    {
+      "valor": "MV",
+      "etiqueta": "Music Video"
+    },
+    {
+      "valor": "ES",
+      "etiqueta": "España"
+    }
   ]
 }
