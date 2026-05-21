@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://img.youtube.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <style>
   :root {
     --accent: #2222FF;
@@ -743,7 +744,6 @@
   </div>
 </div>
 
-<!-- MODAL CONDICIONES -->
 <div class="conditions-modal" id="conditionsModal">
   <div class="conditions-box">
     <div class="conditions-header">
@@ -881,6 +881,71 @@ const reveals = document.querySelectorAll('.reveal');
 const observer = new IntersectionObserver((entries) => { entries.forEach((entry, i) => { if (entry.isIntersecting) { setTimeout(() => entry.target.classList.add('visible'), i * 80); observer.unobserve(entry.target); } }); }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 reveals.forEach(el => observer.observe(el));
 </script>
+
+<script>
+  if (window.netlifyIdentity) {
+    window.netlifyIdentity.on("init", user => {
+      if (!user) {
+        window.netlifyIdentity.on("login", () => {
+          document.location.href = "/admin/";
+        });
+      }
+    });
+  }
+</script>
+
+<script>
+// CONECTAR LAS CONDICIONES DINÁMICAS DEL PANEL
+fetch('/datos/condiciones.json')
+  .then(res => res.json())
+  .then(data => {
+    if (data) {
+      document.querySelector('.cond-price').innerHTML = `${data.precio_video} <span>/ Videoclip</span>`;
+      const blocks = document.querySelectorAll('.conditions-scroll .cond-block');
+      if (blocks.length >= 6) {
+        blocks[1].querySelector('p').innerHTML = data.texto_rodaje;
+        blocks[2].querySelector('p').innerHTML = data.texto_edicion;
+        blocks[3].querySelector('p').innerHTML = data.texto_entrega;
+        blocks[4].querySelector('p').innerHTML = data.texto_desplazamientos;
+        blocks[5].querySelector('p').innerHTML = data.texto_reservas;
+      }
+    }
+  }).catch(err => console.log("Usando datos locales hasta que el cliente publique en el panel"));
+
+// CONECTAR LOS VÍDEOS DINÁMICOS DEL PANEL
+fetch('/datos/videos.json')
+  .then(res => res.json())
+  .then(data => {
+    if (data && data.trabajos) {
+      const grid = document.querySelector('.work-grid');
+      if(grid) {
+        grid.innerHTML = ''; // Borra los fijos
+        data.trabajos.forEach(trabajo => {
+          const item = document.createElement('div');
+          item.className = 'work-item reveal visible';
+          item.setAttribute('data-video', trabajo.youtube_id);
+          item.innerHTML = `
+            <img class="work-thumb" src="https://img.youtube.com/vi/${trabajo.youtube_id}/maxresdefault.jpg" alt="${trabajo.titulo}" loading="lazy">
+            <div class="work-overlay"></div>
+            <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+            <div class="work-info">
+              <div class="work-client">${trabajo.categoria}</div>
+              <div class="work-title">${trabajo.titulo}</div>
+              <div class="work-director">${trabajo.director}</div>
+            </div>
+          `;
+          item.addEventListener('click', () => openVideo(trabajo.youtube_id));
+          if (typeof cursor !== 'undefined') {
+            item.addEventListener('mouseenter', () => cursor.classList.add('expanded'));
+            item.addEventListener('mouseleave', () => cursor.classList.remove('expanded'));
+          }
+          grid.appendChild(item);
+        });
+      }
+    }
+  }).catch(err => console.log("Usando vídeos locales hasta que el cliente publique en el panel"));
+</script>
+
 </body>
 </html>
 
