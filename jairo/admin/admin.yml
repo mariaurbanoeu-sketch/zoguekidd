@@ -1,0 +1,17 @@
+backend:
+  name: git-gateway
+  branch: main # Rama de GitHub
+
+media_folder: "images" # Dónde se guardan las fotos nuevas
+public_folder: "/images"
+
+collections:
+  - name: "ajustes"
+    label: "Ajustes y Tarifas"
+    files:
+      - label: "Condiciones de Trabajo"
+        name: "condiciones"
+        file: "datos/condiciones.json"
+        fields:
+          - {label: "Precio Videoclip", name: "precio_video", widget: "number"}
+          - {label: "Precio Hora Extra", name: "precio_hora", widget: "number"}

@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ZOGUEKIDD — Filmmaker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://img.youtube.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #2222FF;
+    --accent-bright: #3333FF;
+    --accent-glow: rgba(34,34,255,0.35);
+    --dark: #1C1C1C;
+    --darker: #141414;
+    --darkest: #0E0E0E;
+    --white: #F0F0F0;
+    --grey: #888888;
+    --grey-dim: #444444;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; overscroll-behavior: auto; }
+
+  body {
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'Space Mono', monospace;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    position: fixed;
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease, width 0.2s ease, height 0.2s ease, background 0.2s ease;
+    mix-blend-mode: difference;
+    display: none;
+  }
+  
+  @media (min-width: 768px) {
+    body { cursor: none; }
+    .cursor { display: block; }
+    .cursor.expanded { width: 40px; height: 40px; background: var(--accent-bright); }
+  }
+
+  /* LOADER */
+  #loader {
+    position: fixed;
+    inset: 0;
+    background: var(--darkest);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  #loader.hidden { opacity: 0; visibility: hidden; }
+  .loader-logo img {
+    height: 100px;
+    animation: float 2.5s ease-in-out infinite;
+  }
+  .loader-bar-wrap { width: 200px; height: 2px; background: var(--grey-dim); overflow: hidden; border-radius: 2px; }
+  .loader-bar { height: 100%; background: var(--accent); animation: loadBar 2s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+  
+  @keyframes loadBar { from { width: 0; } to { width: 100%; } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: rgba(28,28,28,0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .nav-logo img {
+    height: 36px;
+    width: auto;
+    display: block;
+  }
+  
+  .nav-menu-btn { 
+    display: flex; 
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    flex-direction: column; 
+    gap: 6px; 
+    padding: 4px; 
+  }
+  .nav-menu-btn span { 
+    display: block; 
+    width: 28px; 
+    height: 2px; 
+    background: var(--white); 
+    transition: all 0.3s ease; 
+  }
+  .nav-menu-btn.open span:nth-child(1) { transform: rotate(45deg) translate(6px, 6px); }
+  .nav-menu-btn.open span:nth-child(2) { opacity: 0; }
+  .nav-menu-btn.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+  /* FULLSCREEN MENU */
+  .mobile-menu { 
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; right: 0; bottom: 0; 
+    background: var(--darkest); 
+    z-index: 90; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 40px; 
+    opacity: 0; 
+    transition: opacity 0.3s ease; 
+  }
+  .mobile-menu.visible { opacity: 1; display: flex; }
+  .mobile-menu a { 
+    font-family: 'Bebas Neue', sans-serif; 
+    font-size: clamp(48px, 8vw, 80px); 
+    letter-spacing: 0.1em; 
+    color: var(--white); 
+    text-decoration: none; 
+    transition: color 0.2s; 
+  }
+  .mobile-menu a:hover, .mobile-menu a:active { color: var(--accent); }
+
+  /* HERO */
+  #hero {
+    position: relative;
+    height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 80px;
+    padding-bottom: 60px;
+    overflow: hidden;
+    background: var(--darkest);
+  }
+  .hero-video-wrap { position: absolute; inset: 0; background: var(--darkest); overflow: hidden; }
+  .hero-video-wrap::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(14,14,14,0.1) 0%, rgba(14,14,14,0) 60%, rgba(14,14,14,0.95) 100%); z-index: 1; }
+  
+  .hero-video-placeholder { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(0.65) contrast(1.05); transform: scale(1.05); animation: slowZoom 20s ease-out infinite alternate; }
+  
+  @keyframes slowZoom { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
+
+  .hero-content { position: relative; z-index: 2; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 90%; }
+  .hero-eyebrow { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); }
+  
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(80px, 20vw, 160px);
+    line-height: 0.85;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    text-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    margin: 10px 0;
+  }
+  
+  .hero-sub { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(13px, 3.5vw, 16px); font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; color: var(--grey); }
+
+  /* ESTILO PARA NUEVAS FOTOS DE SECCIÓN */
+  .full-width-section-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    aspect-ratio: 21/9;
+    border-radius: 4px;
+    display: block;
+    margin-bottom: 56px;
+    filter: brightness(0.8) contrast(1.1);
+  }
+  @media (max-width: 767px) {
+    .full-width-section-image {
+      aspect-ratio: 16/9;
+      margin-bottom: 40px;
+    }
+  }
+
+  /* SECTIONS */
+  section { padding: 100px 20px; }
+  .section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.35em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .section-label::before { content: ''; width: 30px; height: 2px; background: var(--accent); }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px, 12vw, 96px); line-height: 1; letter-spacing: 0.04em; color: var(--white); margin-bottom: 56px; }
+
+  /* WORK GRID */
+  #work { background: var(--darker); padding-top: 100px; padding-bottom: 100px; }
+  .work-header { padding: 0 0 20px 0; margin-bottom: 20px; }
+  .work-grid { display: grid; grid-template-columns: 1fr; gap: 4px; }
+  
+  .work-item { position: relative; aspect-ratio: 16/9; overflow: hidden; cursor: pointer; background: var(--darkest); border-radius: 4px; }
+  .work-item:first-child { aspect-ratio: 16/10; cursor: pointer; }
+  
+  .work-thumb { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); display: block; opacity: 0.9; }
+  .work-item:hover .work-thumb, .work-item:active .work-thumb { transform: scale(1.05); opacity: 1; }
+  
+  .work-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,14,14,0.98) 0%, rgba(14,14,14,0.4) 40%, transparent 100%); transition: opacity 0.3s ease; }
+  .work-item:hover .work-overlay, .work-item:active .work-overlay { opacity: 1; }
+  
+  .work-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 24px; transform: translateY(4px); transition: transform 0.3s ease; }
+  .work-item:hover .work-info, .work-item:active .work-info { transform: translateY(0); }
+  
+  .work-client { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .work-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(26px, 6vw, 36px); letter-spacing: 0.06em; color: var(--white); margin-bottom: 6px; line-height: 1; }
+  .work-director { font-family: 'Space Mono', monospace; font-size: 11px; color: #b0b0b0; letter-spacing: 0.1em; }
+  
+  .work-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); opacity: 0; transition: all 0.3s ease; width: 64px; height: 64px; border: 2px solid rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); }
+  .work-play svg { width: 22px; height: 22px; fill: white; margin-left: 4px; }
+  .work-item[data-video]:hover .work-play, .work-item[data-video]:active .work-play { opacity: 1; transform: translate(-50%, -50%) scale(1); border-color: var(--accent); }
+
+  /* VIDEO MODAL */
+  .modal { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(10,10,10,0.98); align-items: center; justify-content: center; padding: 10px; }
+  .modal.active { display: flex; }
+  .modal-inner { position: relative; width: 100%; max-width: 1000px; }
+  .modal-close { position: absolute; top: -50px; right: 0; background: none; border: none; color: var(--white); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 10px; }
+  .modal-close:hover, .modal-close:active { color: var(--accent); }
+  .modal-video { position: relative; padding-bottom: 56.25%; height: 0; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  .modal-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+
+  /* ABOUT */
+  #about { background: var(--dark); }
+  .about-grid { display: grid; grid-template-columns: 1fr; gap: 56px; }
+  .about-text p { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(20px, 5vw, 24px); font-weight: 300; line-height: 1.6; color: #CCCCCC; margin-bottom: 24px; }
+  .about-text strong { color: var(--accent); font-weight: 600; }
+  .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .stat { background: var(--darker); padding: 32px 20px; border-left: 2px solid var(--accent); border-radius: 4px; }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 8vw, 56px); color: var(--accent); line-height: 1; letter-spacing: 0.04em; }
+  .stat-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--grey); margin-top: 8px; }
+
+  /* SERVICES */
+  #services { background: var(--darkest); }
+  .services-list { display: flex; flex-direction: column; gap: 0; }
+  .service-item { display: flex; align-items: center; justify-content: space-between; padding: 24px 0; border-bottom: 1px solid var(--grey-dim); cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
+  .service-item::before { content: ''; position: absolute; left: -100%; top: 0; bottom: 0; width: 4px; background: var(--accent); transition: left 0.3s ease; }
+  .service-item:hover::before, .service-item:active::before { left: 0; }
+  .service-item:hover, .service-item:active { padding-left: 20px; background: rgba(255,255,255,0.02); }
+  .service-name { font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 8vw, 48px); letter-spacing: 0.06em; color: var(--white); transition: color 0.2s; }
+  .service-item:hover .service-name, .service-item:active .service-name { color: var(--accent); }
+  .service-arrow { font-size: 24px; color: var(--grey-dim); transition: color 0.2s, transform 0.2s; }
+  .service-item:hover .service-arrow, .service-item:active .service-arrow { color: var(--accent); transform: translateX(8px); }
+
+  /* CONTACT */
+  #contact { background: var(--accent); text-align: center; padding: 100px 20px; }
+  #contact .section-label { color: rgba(255,255,255,0.7); justify-content: center; }
+  #contact .section-label::before { background: rgba(255,255,255,0.7); }
+  #contact .section-title { color: #fff; margin-bottom: 24px; }
+  .contact-sub { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(18px, 4vw, 22px); font-weight: 300; color: rgba(255,255,255,0.8); margin-bottom: 48px; max-width: 500px; margin-left: auto; margin-right: auto; }
+  
+  .contact-btn { display: inline-flex; align-items: center; gap: 12px; background: #fff; color: var(--accent); font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; padding: 20px 48px; text-decoration: none; transition: all 0.3s ease; border-radius: 4px; border: none; cursor: pointer; }
+  .contact-btn:hover, .contact-btn:active { background: var(--darkest); color: #fff; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+
+  /* FOOTER */
+  footer { 
+    position: relative;
+    background: var(--darkest); 
+    padding: 40px 20px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 32px; 
+    border-top: 1px solid rgba(255,255,255,0.05); 
+    text-align: center;
+  }
+  .footer-logo img { 
+    height: 65px; 
+    width: auto; 
+    display: block; 
+  }
+  .footer-copy { 
+    font-family: 'Space Mono', monospace; 
+    font-size: 11px; 
+    color: var(--grey); 
+    letter-spacing: 0.1em; 
+  }
+  .footer-social { 
+    display: flex; 
+    gap: 20px; 
+    list-style: none; 
+    justify-content: center;
+  }
+  .footer-social a { 
+    color: var(--grey); 
+    font-size: 14px; 
+    text-decoration: none; 
+    transition: color 0.2s; 
+    font-family: 'Barlow Condensed', sans-serif; 
+    letter-spacing: 0.1em; 
+  }
+  .footer-social a:hover { color: var(--accent); }
+
+  /* REVEAL ANIMATIONS */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* CONDICIONES MODAL */
+  .conditions-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(10,10,10,0.92);
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+  }
+  .conditions-modal.active { display: flex; }
+  .conditions-box {
+    position: relative;
+    background: var(--darker);
+    border-top: 2px solid var(--accent);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90svh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .conditions-header {
+    padding: 28px 24px 16px;
+    border-bottom: 1px solid var(--grey-dim);
+  }
+  .conditions-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 0.06em;
+    color: var(--white);
+  }
+  .conditions-scroll {
+    overflow-y: auto;
+    padding: 20px 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--darkest);
+  }
+  .cond-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+  .cond-price span {
+    font-size: 20px;
+    color: var(--grey);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+  }
+  .cond-block {
+    border-left: 2px solid var(--grey-dim);
+    padding-left: 16px;
+    transition: border-color 0.2s;
+  }
+  .cond-block:first-child { border-left: none; padding-left: 0; }
+  .cond-heading {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .cond-block p {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.5;
+    color: #BBBBBB;
+  }
+  .cond-block p strong { color: var(--white); font-weight: 600; }
+  .conditions-accept {
+    padding: 20px 24px;
+    border-top: 1px solid var(--grey-dim);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .cond-check-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--white);
+    user-select: none;
+  }
+  .cond-check-label input { display: none; }
+  .cond-checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--grey-dim);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .cond-check-label input:checked + .cond-checkmark {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+  .cond-check-label input:checked + .cond-checkmark::after {
+    content: '✓';
+    font-size: 12px;
+    color: white;
+    font-weight: 700;
+  }
+  .cond-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .cond-submit.enabled {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .cond-submit.enabled:hover {
+    background: var(--white);
+    color: var(--accent);
+  }
+  .conditions-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--grey);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: color 0.2s;
+  }
+  .conditions-close:hover { color: var(--white); }
+
+  /* DESKTOP OPTIMIZATIONS */
+  @media (min-width: 768px) {
+    nav { padding: 20px 60px; }
+    section { padding: 120px 60px; }
+    .work-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .work-item:first-child { grid-column: 1 / -1; aspect-ratio: 21/9; }
+    .stat { padding: 40px 24px; }
+    
+    footer { 
+      flex-direction: row; 
+      justify-content: space-between; 
+      padding: 40px 60px; 
+      align-items: center;
+    }
+    .footer-copy {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .conditions-modal { align-items: center; padding: 20px; }
+    .conditions-box { border: 1px solid rgba(34,34,255,0.4); border-top: 2px solid var(--accent); }
+  }
+
+  /* GRAIN OVERLAY */
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9998; opacity: 0.4; }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<div id="loader">
+  <div class="loader-logo">
+    <img src="imagotipo_azul_zoguekidd.png" alt="ZogueKidd Logo Carga">
+  </div>
+  <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+</div>
+
+<nav>
+  <a href="#hero" class="nav-logo">
+    <img src="imagotipo_azul_zoguekidd.png" alt="ZogueKidd Logo">
+  </a>
+  <button class="nav-menu-btn" id="menuBtn" aria-label="Menu Móvil">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#work" class="menu-link">Work</a>
+  <a href="#about" class="menu-link">About</a>
+  <a href="#services" class="menu-link">Services</a>
+  <a href="#contact" class="menu-link">Contact</a>
+</div>
+
+<section id="hero">
+  <div class="hero-video-wrap">
+    <img class="hero-video-placeholder" src="FOTO1.webp" alt="ZogueKidd Portada Hero cinematic" fetchpriority="high">
+  </div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Filmmaker & Director</div>
+    
+    <img src="imagotipo_blanco_zoguekidd.png" alt="ZOGUEKIDD" style="width: clamp(200px, 30vw, 350px); opacity: 0.65; display: block; margin: 10px auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));" fetchpriority="high">
+    
+    <div class="hero-sub">Music Videos · Commercials · Short Film</div>
+  </div>
+</section>
+
+<section id="work">
+  <div class="work-header reveal">
+    <div class="section-label">Portfolio</div>
+    <h2 class="section-title">Trabajos</h2>
+  </div>
+  <div class="work-grid">
+
+  <div class="work-item reveal" data-video="w2Gc9KDJaX0">
+  <img class="work-thumb" src="https://img.youtube.com/vi/w2Gc9KDJaX0/maxresdefault.jpg" alt="Proyecto" loading="lazy">
+  <div class="work-overlay"></div>
+  <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+  <div class="work-info">
+    <div class="work-client">Music Video</div>
+    <div class="work-title">OSCURIDAD</div>
+    <div class="work-director">Dir. ZogueKidd</div>
+  </div>
+</div>
+
+    <div class="work-item reveal" data-video="BTkHaGzF1dQ">
+      <img class="work-thumb" src="https://img.youtube.com/vi/BTkHaGzF1dQ/maxresdefault.jpg" alt="Proyecto 01" loading="lazy">
+      <div class="work-overlay"></div>
+      <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+      <div class="work-info">
+        <div class="work-client">Music Video</div>
+        <div class="work-title">1234</div>
+        <div class="work-director">Dir. ZogueKidd</div>
+      </div>
+    </div>
+
+    <div class="work-item reveal" data-video="sa2LTdZg2K0">
+      <img class="work-thumb" src="https://img.youtube.com/vi/sa2LTdZg2K0/maxresdefault.jpg" alt="Proyecto 02" loading="lazy">
+      <div class="work-overlay"></div>
+      <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+      <div class="work-info">
+        <div class="work-client">Music Video</div>
+        <div class="work-title">FANTASÍAS</div>
+        <div class="work-director">Dir. ZogueKidd</div>
+      </div>
+    </div>
+
+    <div class="work-item reveal" data-video="Ote-gfusO9s">
+      <img class="work-thumb" src="https://img.youtube.com/vi/Ote-gfusO9s/maxresdefault.jpg" alt="Proyecto 03" loading="lazy">
+      <div class="work-overlay"></div>
+      <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+      <div class="work-info">
+        <div class="work-client">Music Video</div>
+        <div class="work-title">TÚ</div>
+        <div class="work-director">Dir. ZogueKidd</div>
+      </div>
+    </div>
+
+    <div class="work-item reveal" data-video="JzFqSQDOltk">
+      <img class="work-thumb" src="https://img.youtube.com/vi/JzFqSQDOltk/maxresdefault.jpg" alt="Proyecto 04" loading="lazy">
+      <div class="work-overlay"></div>
+      <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+      <div class="work-info">
+        <div class="work-client">Music Video</div>
+        <div class="work-title">NEBULOSA</div>
+        <div class="work-director">Dir. ZogueKidd</div>
+      </div>
+    </div>
+
+    <div class="work-item reveal" data-video="CqNO6IeK2zU">
+      <img class="work-thumb" src="https://img.youtube.com/vi/CqNO6IeK2zU/maxresdefault.jpg" alt="Proyecto 05" loading="lazy">
+      <div class="work-overlay"></div>
+      <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+      <div class="work-info">
+        <div class="work-client">Music Video</div>
+        <div class="work-title">MIS PENSAMIENTOS</div>
+        <div class="work-director">Dir. ZogueKidd</div>
+      </div>
+    </div>
+
+    <div class="work-item reveal" data-video="1b_ANMF_7xM">
+      <img class="work-thumb" src="https://img.youtube.com/vi/1b_ANMF_7xM/maxresdefault.jpg" alt="Proyecto 06" loading="lazy">
+      <div class="work-overlay"></div>
+      <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+      <div class="work-info">
+        <div class="work-client">Music Video</div>
+        <div class="work-title">SIRENA</div>
+        <div class="work-director">Dir. ZogueKidd</div>
+      </div>
+    </div>
+
+    <div class="work-item reveal" data-video="b2AZe04L0is">
+      <img class="work-thumb" src="https://img.youtube.com/vi/b2AZe04L0is/maxresdefault.jpg" alt="Proyecto 07" loading="lazy">
+      <div class="work-overlay"></div>
+      <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+      <div class="work-info">
+        <div class="work-client">Music Video</div>
+        <div class="work-title">BEBÉ</div>
+        <div class="work-director">Dir. ZogueKidd</div>
+      </div>
+    </div>
+
+    <div class="work-item reveal" data-video="TZ103h6Sfo8">
+      <img class="work-thumb" src="https://img.youtube.com/vi/TZ103h6Sfo8/maxresdefault.jpg" alt="Proyecto 08" loading="lazy">
+      <div class="work-overlay"></div>
+      <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+      <div class="work-info">
+        <div class="work-client">Music Video</div>
+        <div class="work-title">KAROL G</div>
+        <div class="work-director">Dir. ZogueKidd</div>
+      </div>
+    </div>
+
+    <div class="work-item reveal" data-video="XwcPNhUkniA">
+      <img class="work-thumb" src="https://img.youtube.com/vi/XwcPNhUkniA/hqdefault.jpg" alt="Proyecto 09" loading="lazy">
+      <div class="work-overlay"></div>
+      <div class="work-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+      <div class="work-info">
+        <div class="work-client">Music Video</div>
+        <div class="work-title">QVASASER?</div>
+        <div class="work-director">Dir. ZogueKidd</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="about">
+  <img src="FOTO2.webp" alt="ZogueKidd Behind the Scenes" class="reveal" style="width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; height: auto; object-fit: cover; aspect-ratio: 21/9; border-radius: 0; display: block; margin-bottom: 56px; filter: brightness(0.8) contrast(1.1); max-width: none;" loading="lazy">
+  <div class="about-grid">
+    <div class="about-text reveal">
+      <div class="section-label">About</div>
+      <h2 class="section-title">Quién<br>soy</h2>
+      <p>Soy <strong>ZogueKidd</strong>, filmmaker y director especializado en <strong>música y narrativa visual</strong>. Cada proyecto es una historia que merece ser contada con precisión, estilo y emoción.</p>
+      <p>Trabajo con artistas, marcas y productoras que quieren ir más allá de lo unconventional. Desde el concepto hasta la entrega final, cuido cada detalle del proceso.</p>
+    </div>
+    <div class="about-stats reveal">
+      <div class="stat">
+        <div class="stat-num">30+</div>
+        <div class="stat-label">Proyectos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Dedicación</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">MV</div>
+        <div class="stat-label">Music Video</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">ES</div>
+        <div class="stat-label">España</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="services">
+  <img src="FOTO3.webp" alt="Narrativa Visual ZogueKidd" class="reveal" style="width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; height: auto; object-fit: cover; aspect-ratio: 21/9; border-radius: 0; display: block; margin-bottom: 56px; filter: brightness(0.8) contrast(1.1); max-width: none;" loading="lazy">
+  <div class="section-label reveal">Servicios</div>
+  <h2 class="section-title reveal">Qué hago</h2>
+  <div class="services-list">
+    <div class="service-item reveal"><span class="service-name">Music Videos</span><span class="service-arrow">→</span></div>
+    <div class="service-item reveal"><span class="service-name">Dirección</span><span class="service-arrow">→</span></div>
+    <div class="service-item reveal"><span class="service-name">Comerciales</span><span class="service-arrow">→</span></div>
+    <div class="service-item reveal"><span class="service-name">Postproducción</span><span class="service-arrow">→</span></div>
+    <div class="service-item reveal"><span class="service-name">Color Grading</span><span class="service-arrow">→</span></div>
+    <div class="service-item reveal"><span class="service-name">Short Films</span><span class="service-arrow">→</span></div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="section-label reveal">Contacto</div>
+  <h2 class="section-title reveal">Hablemos</h2>
+  <p class="contact-sub reveal">¿Tienes un proyecto en mente? Me encanta trabajar con ideas que rompan esquemas.</p>
+  
+  <button class="contact-btn reveal" id="openConditions">
+    Trabajar juntos →
+  </button>
+</section>
+
+<footer>
+  <div class="footer-logo">
+    <img src="logotipo_azul_zoguekidd.png" alt="ZogueKidd Footer Logo Textual" loading="lazy">
+  </div>
+  <div class="footer-copy">© 2026 ZogueKidd. Todos los derechos reservados.</div>
+  <ul class="footer-social">
+    <li><a href="https://instagram.com/zoguekidd" target="_blank">INSTAGRAM</a></li>
+    <li><a href="https://youtube.com/@zoguekidd?si=jXnWpFEm-JVDqJK1" target="_blank">YOUTUBE</a></li>
+  </ul>
+</footer>
+
+<div class="modal" id="videoModal">
+  <div class="modal-inner">
+    <button class="modal-close" id="modalClose">✕ Cerrar</button>
+    <div class="modal-video">
+      <iframe id="modalIframe" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="comingSoonModal">
+  <div style="text-align: center; padding: 40px;">
+    <h2 style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(60px, 10vw, 100px); color: var(--accent); letter-spacing: 0.05em; margin: 0; line-height: 1;">PRÓXIMAMENTE</h2>
+    <p style="font-family: 'Barlow Condensed', sans-serif; font-size: 16px; color: var(--grey); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 16px; margin-bottom: 40px;">Este proyecto aún no está disponible</p>
+    <button id="closeComingSoon" style="background: transparent; color: var(--white); font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; border: 1px solid var(--white); padding: 16px 40px; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='var(--white)'; this.style.color='var(--darkest)';" onmouseout="this.style.background='transparent'; this.style.color='var(--white)';">Volver</button>
+  </div>
+</div>
+
+<!-- MODAL CONDICIONES -->
+<div class="conditions-modal" id="conditionsModal">
+  <div class="conditions-box">
+    <div class="conditions-header">
+      <div class="section-label" style="margin-bottom:8px">Antes de continuar</div>
+      <h3 class="conditions-title">Condiciones de trabajo</h3>
+    </div>
+    <div class="conditions-scroll">
+      <div class="cond-block">
+        <div class="cond-price">150€ <span>/ Videoclip</span></div>
+      </div>
+      <div class="cond-block">
+        <div class="cond-heading">Rodaje</div>
+        <p>3 horas de grabación. El tiempo empieza a contar desde la hora acordada — los retrasos del cliente o equipo consumen tiempo de rodaje. Horas extra: <strong>40€/h</strong>.</p>
+      </div>
+      <div class="cond-block">
+        <div class="cond-heading">Edición</div>
+        <p>Incluye hasta 2 rondas de cambios. Revisiones extra o cambios grandes: <strong>30€/ronda</strong>.</p>
+      </div>
+      <div class="cond-block">
+        <div class="cond-heading">Entrega</div>
+        <p>De 15 a 20 días laborables. Entregas express se presupuestan aparte.</p>
+      </div>
+      <div class="cond-block">
+        <div class="cond-heading">Desplazamientos</div>
+        <p>No incluidos en el precio base.</p>
+      </div>
+      <div class="cond-block">
+        <div class="cond-heading">Reservas y pagos</div>
+        <p>Reserva mínima con <strong>1 semana</strong> de antelación + <strong>30% por adelantado</strong>.<br>
+        Cancelaciones con menos de 72h: no se devuelve la reserva (se puede cambiar fecha).<br>
+        El resto se abona <strong>al inicio del rodaje</strong>. Sin pago, no se graba y se pierde la reserva.</p>
+      </div>
+    </div>
+    <div class="conditions-accept">
+      <label class="cond-check-label">
+        <input type="checkbox" id="condCheck">
+        <span class="cond-checkmark"></span>
+        He leído y acepto las condiciones
+      </label>
+      <a href="https://wa.me/34615148927?text=Hola%20ZogueKidd,%20he%20le%C3%ADdo%20y%20acepto%20las%20condiciones.%20Tengo%20un%20proyecto%20en%20mente..." target="_blank" class="cond-submit" id="condSubmit" aria-disabled="true">
+        Contactar por WhatsApp →
+      </a>
+    </div>
+    <button class="conditions-close" id="closeConditions">✕</button>
+  </div>
+</div>
+
+<script>
+window.addEventListener('load', () => { setTimeout(() => { document.getElementById('loader').classList.add('hidden'); }, 2200); });
+
+const cursor = document.getElementById('cursor');
+if (cursor) {
+  document.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
+  document.querySelectorAll('a, button, .work-item[data-video], .service-item, .work-item').forEach(el => { el.addEventListener('mouseenter', () => cursor.classList.add('expanded')); el.addEventListener('mouseleave', () => cursor.classList.remove('expanded')); });
+}
+
+const menuBtn = document.getElementById('menuBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+function toggleMenu() {
+  const isOpen = menuBtn.classList.toggle('open');
+  if (isOpen) { mobileMenu.classList.add('visible'); document.body.style.overflow = 'hidden'; } 
+  else { mobileMenu.classList.remove('visible'); document.body.style.overflow = ''; }
+}
+menuBtn.addEventListener('click', toggleMenu);
+document.querySelectorAll('.menu-link').forEach(link => { link.addEventListener('click', toggleMenu); });
+
+const modal = document.getElementById('videoModal');
+const modalIframe = document.getElementById('modalIframe');
+const modalClose = document.getElementById('modalClose');
+
+function openVideo(videoId) { modalIframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&iv_load_policy=3`; modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
+function closeModal() { modal.classList.remove('active'); modalIframe.src = ''; document.body.style.overflow = ''; }
+
+document.querySelectorAll('.work-item[data-video]').forEach(el => { el.addEventListener('click', () => openVideo(el.dataset.video)); });
+modalClose.addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('active')) closeModal(); });
+
+/* LOGICA NUEVO MODAL PROXIMAMENTE */
+const comingSoonModal = document.getElementById('comingSoonModal');
+const closeComingSoonBtn = document.getElementById('closeComingSoon');
+
+function openComingSoon() {
+  comingSoonModal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeComingSoon() {
+  comingSoonModal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+closeComingSoonBtn.addEventListener('click', closeComingSoon);
+comingSoonModal.addEventListener('click', e => { if (e.target === comingSoonModal) closeComingSoon(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && comingSoonModal.classList.contains('active')) closeComingSoon(); });
+
+/* CONDICIONES */
+const condModal = document.getElementById('conditionsModal');
+const condCheck = document.getElementById('condCheck');
+const condSubmit = document.getElementById('condSubmit');
+
+// FUNCIÓN PARA ABRIR EL MODAL Y ACTUALIZAR URL
+function openConditions() {
+  condModal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  history.replaceState(null, null, '#condiciones');
+}
+
+// FUNCIÓN PARA CERRAR EL MODAL Y LIMPIAR URL
+function closeConditions() {
+  condModal.classList.remove('active');
+  document.body.style.overflow = '';
+  history.replaceState(null, null, ' ');
+}
+
+// LÓGICA AL CARGAR LA PÁGINA: SI TIENE #condiciones SE ABRE DIRECTAMENTE
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.location.hash === '#condiciones') {
+    openConditions();
+  }
+});
+
+document.getElementById('openConditions').addEventListener('click', openConditions);
+document.getElementById('closeConditions').addEventListener('click', closeConditions);
+condModal.addEventListener('click', e => {
+  if (e.target === condModal) {
+    closeConditions();
+  }
+});
+condCheck.addEventListener('change', () => {
+  condSubmit.classList.toggle('enabled', condCheck.checked);
+});
+
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => { entries.forEach((entry, i) => { if (entry.isIntersecting) { setTimeout(() => entry.target.classList.add('visible'), i * 80); observer.unobserve(entry.target); } }); }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
+
+```
