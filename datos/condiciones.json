@@ -1,8 +1,9 @@
 {
   "precio_video": "150€",
-  "texto_rodaje": "3 horas de grabación. El tiempo empieza a contar desde la hora acordada — los retrasos del cliente o equipo consumen tiempo de rodaje. Horas extra: <strong>40€/h</strong>.",
-  "texto_edicion": "Incluye hasta 2 rondas de cambios. Revisiones extra o cambios grandes: <strong>30€/ronda</strong>.",
-  "texto_entrega": "De 15 a 20 días laborables. Entregas express se presupuestan aparte.",
-  "texto_desplazamientos": "No incluidos en el precio base.",
-  "texto_reservas": "Reserva mínima con <strong>1 semana</strong> de antelación + <strong>30% por adelantado</strong>.<br>Cancelaciones con menos de 72h: no se devuelve la reserva (se puede cambiar fecha).<br>El resto se abona <strong>al inicio del rodaje</strong>. Sin pago, no se graba y se pierde la reserva."
+  "bloques": [
+    { "titulo": "Rodaje", "texto": "3 horas de grabación. Horas extra: <strong>40€/h</strong>." },
+    { "titulo": "Edición", "texto": "Incluye hasta 2 rondas de cambios." },
+    { "titulo": "Entrega", "texto": "De 15 a 20 días laborables." },
+    { "titulo": "Reservas", "texto": "Reserva con 1 semana de antelación." }
+  ]
 }
